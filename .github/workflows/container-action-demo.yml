@@ -1,0 +1,19 @@
+name: demo-docker-action
+on:
+    workflow_dispatch:
+
+jobs:
+    run-docker-action:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v2
+
+            - name: Use local docker action
+              id: hello
+              uses: ./.github/actions/hello-python
+              with:
+                name: "hoge"
+
+            - name: See job-level output
+              run: echo "OUTPUT -> ${{ steps.hello.outputs.shout }}"

@@ -1,0 +1,16 @@
+name: hello-python (test docker action)
+description: Say hello from Python in a Docker action
+inputs:
+  name:
+    description: Name to Greet
+    required: false
+    default: world
+outputs:
+  shout:
+    description: Shouted greeting
+runs:
+  using: docker
+  image: Dockerfile
+  args:
+    - "--name"
+    - "${{ inputs.name }}"
