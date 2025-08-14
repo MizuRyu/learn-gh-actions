@@ -1,0 +1,27 @@
+name: simple env test
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  quick-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 基本的な環境変数を表示
+        run: |
+          echo "リポジトリ: $GITHUB_REPOSITORY"
+          echo "ブランチ: $GITHUB_REF_NAME"
+          echo "実行者: $GITHUB_ACTOR"
+          echo "イベント: $GITHUB_EVENT_NAME"
+      
+      - name: コンテキストとの比較
+        run: |
+          echo "環境変数 GITHUB_REPOSITORY: $GITHUB_REPOSITORY"
+          echo "コンテキスト github.repository: ${{ github.repository }}"
+          echo "これらは同じ値ですが使い方が違います"
+      
+      - name: 条件分岐の例
+        if: github.ref_name == 'main'
+        run: echo "mainブランチで実行中です！"
