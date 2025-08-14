@@ -1,7 +1,6 @@
 name: simple env test
 
 on:
-  push:
   workflow_dispatch:
 
 jobs:

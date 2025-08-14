@@ -1,0 +1,163 @@
+name: GitHub環境変数の学習
+
+# 様々なイベントで動作させて環境変数の違いを確認
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch: # 手動実行
+    inputs:
+      custom_input:
+        description: 'カスタム入力'
+        required: false
+        default: 'テスト値'
+
+# ワークフローレベルの環境変数
+env:
+  WORKFLOW_VAR: "ワークフローレベルの変数"
+  GLOBAL_SECRET: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  basic-env-vars:
+    name: "基本的な環境変数の確認"
+    runs-on: ubuntu-latest
+    
+    # ジョブレベルの環境変数
+    env:
+      JOB_VAR: "ジョブレベルの変数"
+    
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+      
+      - name: "1. デフォルト環境変数の表示"
+        run: |
+          echo "=== GitHub デフォルト環境変数 ==="
+          echo "GITHUB_REPOSITORY: $GITHUB_REPOSITORY"
+          echo "GITHUB_REF: $GITHUB_REF"
+          echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
+          echo "GITHUB_SHA: $GITHUB_SHA"
+          echo "GITHUB_ACTOR: $GITHUB_ACTOR"
+          echo "GITHUB_WORKFLOW: $GITHUB_WORKFLOW"
+          echo "GITHUB_RUN_ID: $GITHUB_RUN_ID"
+          echo "GITHUB_RUN_NUMBER: $GITHUB_RUN_NUMBER"
+          echo "GITHUB_JOB: $GITHUB_JOB"
+          echo "GITHUB_ACTION: $GITHUB_ACTION"
+          echo "GITHUB_EVENT_NAME: $GITHUB_EVENT_NAME"
+          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
+          echo "RUNNER_OS: $RUNNER_OS"
+          echo "RUNNER_ARCH: $RUNNER_ARCH"
+          echo "RUNNER_NAME: $RUNNER_NAME"
+      
+      - name: "2. github.* コンテキストの表示"
+        run: |
+          echo "=== github コンテキスト ==="
+          echo "github.repository: ${{ github.repository }}"
+          echo "github.repository_owner: ${{ github.repository_owner }}"
+          echo "github.ref: ${{ github.ref }}"
+          echo "github.ref_name: ${{ github.ref_name }}"
+          echo "github.sha: ${{ github.sha }}"
+          echo "github.actor: ${{ github.actor }}"
+          echo "github.workflow: ${{ github.workflow }}"
+          echo "github.run_id: ${{ github.run_id }}"
+          echo "github.run_number: ${{ github.run_number }}"
+          echo "github.job: ${{ github.job }}"
+          echo "github.event_name: ${{ github.event_name }}"
+          echo "github.head_ref: ${{ github.head_ref }}"
+          echo "github.base_ref: ${{ github.base_ref }}"
+      
+      - name: "3. カスタム環境変数の表示"
+        env:
+          STEP_VAR: "ステップレベルの変数"
+        run: |
+          echo "=== カスタム環境変数 ==="
+          echo "WORKFLOW_VAR: $WORKFLOW_VAR"
+          echo "JOB_VAR: $JOB_VAR"
+          echo "STEP_VAR: $STEP_VAR"
+      
+      - name: "4. ワークフロー入力の表示"
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "=== ワークフロー入力 ==="
+          echo "custom_input: ${{ github.event.inputs.custom_input }}"
+      
+      - name: "5. イベント情報の表示"
+        run: |
+          echo "=== イベント情報 ==="
+          echo "Event name: ${{ github.event_name }}"
+          echo "Trigger ref: ${{ github.ref }}"
+          echo "Repository: ${{ github.repository }}"
+          echo "Actor: ${{ github.actor }}"
+      
+      - name: "6. 全環境変数の表示（デバッグ用）"
+        run: |
+          echo "=== 全環境変数 ==="
+          env | sort
+
+  conditional-jobs:
+    name: "条件分岐の例"
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: mainブランチでのみ実行
+        run: |
+          echo "これはmainブランチでのみ実行されます"
+          echo "Current branch: ${{ github.ref_name }}"
+
+  matrix-strategy:
+    name: "マトリックス戦略での環境変数"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [development, staging, production]
+        include:
+          - environment: development
+            deploy_url: "https://dev.example.com"
+          - environment: staging
+            deploy_url: "https://staging.example.com"
+          - environment: production
+            deploy_url: "https://example.com"
+    
+    steps:
+      - name: マトリックス変数の表示
+        run: |
+          echo "=== マトリックス変数 ==="
+          echo "Environment: ${{ matrix.environment }}"
+          echo "Deploy URL: ${{ matrix.deploy_url }}"
+          echo "Job index: ${{ strategy.job-index }}"
+
+  event-analysis:
+    name: "イベント別の分析"
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: チェックアウト
+        uses: actions/checkout@v4
+      
+      - name: プッシュイベントの分析
+        if: github.event_name == 'push'
+        run: |
+          echo "=== プッシュイベント ==="
+          echo "Pushed to: ${{ github.ref }}"
+          echo "Commit SHA: ${{ github.sha }}"
+          echo "Author: ${{ github.event.head_commit.author.name }}"
+          echo "Message: ${{ github.event.head_commit.message }}"
+      
+      - name: プルリクエストイベントの分析
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "=== プルリクエストイベント ==="
+          echo "PR number: ${{ github.event.number }}"
+          echo "Head ref: ${{ github.head_ref }}"
+          echo "Base ref: ${{ github.base_ref }}"
+          echo "PR title: ${{ github.event.pull_request.title }}"
+          echo "PR author: ${{ github.event.pull_request.user.login }}"
+      
+      - name: 手動実行イベントの分析
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "=== 手動実行イベント ==="
+          echo "Triggered by: ${{ github.actor }}"
+          echo "Custom input: ${{ github.event.inputs.custom_input }}"
