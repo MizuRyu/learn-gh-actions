@@ -1,11 +1,7 @@
-name: GitHub環境変数の学習
+name: learn env vars
 
 # 様々なイベントで動作させて環境変数の違いを確認
 on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch: # 手動実行
     inputs:
       custom_input:
